@@ -106,7 +106,7 @@
                     {% for module in hook['modules'] if modules[module['id_module']] is defined %}
                       {% set moduleInstance = modules[module['id_module']] %}
                       <li id="{{ hook['id_hook'] ~ '_' ~ moduleInstance.id }}"
-                        class="module-position-{{ moduleInstance.id }} module-item{% if canMove and hook['modules_count'] >= 2 %} draggable{% endif %}">
+                          class="module-position-{{ moduleInstance.id }} module-item{% if canMove and hook['modules_count'] >= 2 %} draggable{% endif %}">
 
                         <div class="module-column-select">
                           <input type="checkbox" data-hook-id="{{ hook['id_hook'] }}" class="modules-position-checkbox hook{{ hook['id_hook'] }}" name="unhooks[]" value="{{ hook['id_hook'] ~ '_' ~ moduleInstance.id }}"/>
@@ -121,16 +121,16 @@
                             {% if canMove %}
                               <div class="btn-group-vertical module-buttons-update">
                                 <button class="btn btn-outline-primary btn-sm"
-                                  data-hook-id="{{ hook['id_hook'] }}"
-                                  data-module-id="{{ moduleInstance.id }}"
-                                  data-way="0">
+                                        data-hook-id="{{ hook['id_hook'] }}"
+                                        data-module-id="{{ moduleInstance.id }}"
+                                        data-way="0">
                                   <i class="material-icons">expand_less</i>
                                 </button>
 
                                 <button class="btn btn-outline-primary btn-sm"
-                                  data-hook-id="{{ hook['id_hook'] }}"
-                                  data-module-id="{{ moduleInstance.id }}"
-                                  data-way="1">
+                                        data-hook-id="{{ hook['id_hook'] }}"
+                                        data-module-id="{{ moduleInstance.id }}"
+                                        data-way="1">
                                   <i class="material-icons">expand_more</i>
                                 </button>
                               </div>
@@ -157,13 +157,16 @@
                             {% set linkParams = {
                               'id_module': moduleInstance.id,
                               'id_hook': hook['id_hook'],
-                              'editGraft': 1
                             } %}
-                            {% if selectedModule %}
-                              {% set linkParams = linkParams|merge({'show_modules': selectedModule}) %}
-                            {% endif %}
+                            {# recheck if this 'selectedModule` needed here, it might only controll the selection display #}
+                            {#                            {% if selectedModule %}#}
+                            {#                              {% set linkParams = linkParams|merge({'show_modules': selectedModule}) %}#}
+                            {#                            {% endif %}#}
 
-                            <a class="btn btn-outline-primary btn-sm" href="{{ getAdminLink('AdminModulesPositions', true, linkParams) }}">
+                            <a class="btn btn-outline-primary btn-sm" href="{{ path('admin_modules_positions_edit', {
+                              'moduleId' : moduleInstance.id,
+                              'hookId': hook['id_hook'],
+                            }) }}">
                               <i class="material-icons">edit</i>
                               {{ 'Edit' | trans({}, 'Admin.Actions') }}
                             </a>
