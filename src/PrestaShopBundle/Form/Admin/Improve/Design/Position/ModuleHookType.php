@@ -46,12 +46,19 @@ class ModuleHookType extends AbstractType
      */
     private $moduleNameByIdChoices;
 
+    /**
+     * @var array
+     */
+    private $moduleFileExceptions;
+
     public function __construct(
         TranslatorInterface $translator,
-        array $moduleNameByIdChoices
+        array $moduleNameByIdChoices,
+        array $moduleFileExceptions
     ) {
         $this->translator = $translator;
         $this->moduleNameByIdChoices = $moduleNameByIdChoices;
+        $this->moduleFileExceptions = $moduleFileExceptions;
     }
 
     /**
@@ -72,7 +79,8 @@ class ModuleHookType extends AbstractType
                 'choices' => [],
             ])
             ->add('except_files', ChoiceType::class, [
-                'choices' => [],
+                'choices' => $this->moduleFileExceptions,
+                'multiple' => true,
             ])
         ;
     }

@@ -44,3 +44,8 @@ services:
 
   prestashop.adapter.form.choice_provider.module_hook_by_id:
     class: 'PrestaShop\PrestaShop\Adapter\Form\ChoiceProvider\ModuleHookByIdChoiceProvider'
+
+  prestashop.adapter.form.choice_provider.module_file_exceptions:
+    class: 'PrestaShop\PrestaShop\Adapter\Form\ChoiceProvider\ModuleFileExceptionsChoiceProvider'
+    arguments:
+      - '@translator'

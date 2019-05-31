@@ -871,5 +871,6 @@ services:
       arguments:
         - '@translator'
         - '@=service("prestashop.adapter.form.choice_provider.module_name_by_id").getChoices()'
+        - '@=service("prestashop.adapter.form.choice_provider.module_file_exceptions").getChoices()'
       tags:
         - { name: form.type }

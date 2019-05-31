@@ -20,7 +20,7 @@ admin_modules_positions_add_to_hook:
   defaults:
     _controller: 'PrestaShopBundle:Admin\Improve\Design\Positions:addToHook'
     _legacy_controller: AdminModulesPositions
-    _legacy_link: AdminModulesPositions:addToHook
+#    _legacy_link: AdminModulesPositions:addToHook
 
 
 admin_modules_positions_edit:
