@@ -150,6 +150,7 @@ export default class CreateOrderPage {
     this.onCustomersNotFound();
     this._onCustomerSelected();
     this.initAddressButtonsIframe();
+    this.initCartRuleButtonsIframe();
   }
 
   /**
@@ -169,6 +170,17 @@ export default class CreateOrderPage {
     });
 
     $(createOrderMap.deliveryAddressEditBtn).fancybox({
+      'type': 'iframe',
+      'width': '90%',
+      'height': '90%',
+    });
+  }
+
+  /**
+   * @private
+   */
+  initCartRuleButtonsIframe() {
+    $('#js-add-cart-rule-btn').fancybox({
       'type': 'iframe',
       'width': '90%',
       'height': '90%',
@@ -547,6 +559,7 @@ export default class CreateOrderPage {
    * @private
    */
   refreshAddressesList(refreshCartAddresses) {
+    debugger;
     const cartId = $(createOrderMap.cartBlock).data('cartId');
     $.get(this.router.generate('admin_carts_info', {cartId})).then((cartInfo) => {
       this.addressesRenderer.render(cartInfo.addresses);

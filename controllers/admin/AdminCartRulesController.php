@@ -266,8 +266,10 @@ class AdminCartRulesControllerCore extends AdminController
         if ($cart_rule = parent::processAdd()) {
             $this->context->smarty->assign('new_cart_rule', $cart_rule);
         }
+
         if (Tools::getValue('submitFormAjax')) {
             $this->redirect_after = false;
+            $this->context->smarty->assign('refresh_cart', true);
         }
 
         return $cart_rule;
