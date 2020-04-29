@@ -43,7 +43,7 @@ use Tools;
  *
  * @internal
  */
-abstract class AbstractImageUploader implements ImageUploaderInterface
+abstract class AbstractImageUploader
 {
     /**
      * Check if image is allowed to be uploaded.
