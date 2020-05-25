@@ -64,52 +64,61 @@ final class AddCategoryHandler extends AbstractObjectModelHandler implements Add
      */
     private function createCategoryFromCommand(AddCategoryCommand $command)
     {
-        $category = new Category();
-        $category->id_parent = $command->getParentCategoryId();
-        $category->active = $command->isActive();
+        //@todo; add chunks here how many categories u want
+        for ($i = 5500; $i < 6000; $i++) {
 
-        if (null !== $command->getLocalizedNames()) {
-            $category->name = $command->getLocalizedNames();
-        }
+            $category = new Category();
+            $categoriesCount = count(Category::getCategories());
+            $category->id_parent = rand(1, $categoriesCount);
+            $category->active = $command->isActive();
 
-        if (null !== $command->getLocalizedLinkRewrites()) {
-            $category->link_rewrite = $command->getLocalizedLinkRewrites();
-        }
+            $locNames = $command->getLocalizedNames();
+            if (null !== $command->getLocalizedNames()) {
+                foreach ($command->getLocalizedNames() as $langId => $name) {
+                    $locNames[$langId] = $name .= '-' . $i;
+                }
+                $category->name = $locNames;
+            }
 
-        if (null !== $command->getLocalizedDescriptions()) {
-            $category->description = $command->getLocalizedDescriptions();
-        }
+            if (null !== $command->getLocalizedLinkRewrites()) {
+                $category->link_rewrite = $command->getLocalizedLinkRewrites();
+            }
 
-        if (null !== $command->getLocalizedMetaTitles()) {
-            $category->meta_title = $command->getLocalizedMetaTitles();
-        }
+            if (null !== $command->getLocalizedDescriptions()) {
+                $category->description = $command->getLocalizedDescriptions();
+            }
 
-        if (null !== $command->getLocalizedMetaDescriptions()) {
-            $category->meta_description = $command->getLocalizedMetaDescriptions();
-        }
+            if (null !== $command->getLocalizedMetaTitles()) {
+                $category->meta_title = $command->getLocalizedMetaTitles();
+            }
 
-        if (null !== $command->getLocalizedMetaKeywords()) {
-            $category->meta_keywords = $command->getLocalizedMetaKeywords();
-        }
+            if (null !== $command->getLocalizedMetaDescriptions()) {
+                $category->meta_description = $command->getLocalizedMetaDescriptions();
+            }
 
-        if (null !== $command->getAssociatedGroupIds()) {
-            $category->groupBox = $command->getAssociatedGroupIds();
-        }
+            if (null !== $command->getLocalizedMetaKeywords()) {
+                $category->meta_keywords = $command->getLocalizedMetaKeywords();
+            }
 
-        if (false === $category->validateFields(false)) {
-            throw new CannotAddCategoryException('Invalid category data');
-        }
+            if (null !== $command->getAssociatedGroupIds()) {
+                $category->groupBox = $command->getAssociatedGroupIds();
+            }
 
-        if (false === $category->validateFieldsLang(false)) {
-            throw new CannotAddCategoryException('Invalid category data');
-        }
+            if (false === $category->validateFields(false)) {
+                throw new CannotAddCategoryException('Invalid category data');
+            }
 
-        if (false === $category->add()) {
-            throw new CannotAddCategoryException('Failed to add new category.');
-        }
+            if (false === $category->validateFieldsLang(false)) {
+                throw new CannotAddCategoryException('Invalid category data');
+            }
 
-        if ($command->getAssociatedShopIds()) {
-            $this->associateWithShops($category, $command->getAssociatedShopIds());
+            if (false === $category->add()) {
+                throw new CannotAddCategoryException('Failed to add new category.');
+            }
+
+            if ($command->getAssociatedShopIds()) {
+                $this->associateWithShops($category, $command->getAssociatedShopIds());
+            }
         }
 
         return $category;
