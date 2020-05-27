@@ -1145,3 +1145,9 @@ services:
         - '@translator'
       tags:
         - { name: form.type }
+
+    form.type.catalog.product.product_basic_information_type:
+      class: 'PrestaShopBundle\Form\Admin\Catalog\Product\ProductBasicInformationType'
+      public: true
+      arguments:
+        - '@=service("prestashop.core.form.choice_provider.product_type_choice_provider").getChoices()'

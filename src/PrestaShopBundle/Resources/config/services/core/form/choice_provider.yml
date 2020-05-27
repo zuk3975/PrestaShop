@@ -244,3 +244,8 @@ services:
     class: 'PrestaShop\PrestaShop\Core\Form\ChoiceProvider\CustomerServiceOrderMessagesChoiceProvider'
     arguments:
       - '@=service("prestashop.adapter.order_message.order_message_provider").getMessages()'
+
+  prestashop.core.form.choice_provider.product_type_choice_provider:
+    class: 'PrestaShop\PrestaShop\Core\Form\ChoiceProvider\ProductTypeChoiceProvider'
+    arguments:
+      - '@translator'
