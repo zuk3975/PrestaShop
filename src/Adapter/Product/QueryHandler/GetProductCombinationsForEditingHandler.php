@@ -69,7 +69,7 @@ final class GetProductCombinationsForEditingHandler extends AbstractProductHandl
         $product = $this->getProduct($query->getProductId());
         $combinations = $this->getCombinations((int) $product->id, $query->getOffset(), $query->getLimit());
 
-        $combinationIds = array_map(function ($combination) {
+        $combinationIds = array_map(function ($combination): int {
             return (int) $combination['id_product_attribute'];
         }, $combinations);
 
