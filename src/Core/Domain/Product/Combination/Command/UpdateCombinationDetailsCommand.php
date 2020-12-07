@@ -74,7 +74,7 @@ class UpdateCombinationDetailsCommand
     /**
      * @var DecimalNumber|null
      */
-    private $weight;
+    private $impactOnWeight;
 
     /**
      * @param int $combinationId
@@ -198,19 +198,19 @@ class UpdateCombinationDetailsCommand
     /**
      * @return DecimalNumber|null
      */
-    public function getWeight(): ?DecimalNumber
+    public function getImpactOnWeight(): ?DecimalNumber
     {
-        return $this->weight;
+        return $this->impactOnWeight;
     }
 
     /**
-     * @param string $weight
+     * @param string $impactOnWeight
      *
      * @return UpdateCombinationDetailsCommand
      */
-    public function setWeight(string $weight): UpdateCombinationDetailsCommand
+    public function setImpactOnWeight(string $impactOnWeight): UpdateCombinationDetailsCommand
     {
-        $this->weight = new DecimalNumber($weight);
+        $this->impactOnWeight = new DecimalNumber($impactOnWeight);
 
         return $this;
     }

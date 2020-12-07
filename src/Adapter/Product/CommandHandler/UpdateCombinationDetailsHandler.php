@@ -64,7 +64,7 @@ final class UpdateCombinationDetailsHandler implements UpdateCombinationDetailsH
         $this->combinationRepository->partialUpdate(
             $combination,
             $updatableProperties,
-            CannotUpdateCombinationException::FAILED_UPDATE_OPTIONS
+            CannotUpdateCombinationException::FAILED_UPDATE_DETAILS
         );
     }
 
@@ -105,8 +105,8 @@ final class UpdateCombinationDetailsHandler implements UpdateCombinationDetailsH
             $updatableProperties[] = 'upc';
         }
 
-        if (null !== $command->getWeight()) {
-            $combination->weight = (float) (string) $command->getWeight();
+        if (null !== $command->getImpactOnWeight()) {
+            $combination->weight = (float) (string) $command->getImpactOnWeight();
         }
 
         return $updatableProperties;
