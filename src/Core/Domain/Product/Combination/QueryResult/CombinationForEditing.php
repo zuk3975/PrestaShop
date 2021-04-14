@@ -54,21 +54,29 @@ class CombinationForEditing
     private $stock;
 
     /**
+     * @var CombinationForEditingImage[]
+     */
+    private $combinationForEditingImages;
+
+    /**
      * @param string $name
      * @param CombinationDetails $options
      * @param CombinationPrices $prices
      * @param CombinationStock $stock
+     * @param CombinationForEditingImage[] $combinationForEditingImages
      */
     public function __construct(
         string $name,
         CombinationDetails $options,
         CombinationPrices $prices,
-        CombinationStock $stock
+        CombinationStock $stock,
+        array $combinationForEditingImages
     ) {
         $this->name = $name;
         $this->details = $options;
         $this->stock = $stock;
         $this->prices = $prices;
+        $this->combinationForEditingImages = $combinationForEditingImages;
     }
 
     /**
@@ -101,5 +109,13 @@ class CombinationForEditing
     public function getStock(): CombinationStock
     {
         return $this->stock;
+    }
+
+    /**
+     * @return CombinationForEditingImage[]
+     */
+    public function getCombinationForEditingImages(): array
+    {
+        return $this->combinationForEditingImages;
     }
 }

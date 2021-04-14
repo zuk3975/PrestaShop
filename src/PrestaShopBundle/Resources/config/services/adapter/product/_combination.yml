@@ -41,6 +41,8 @@ services:
             - '@prestashop.adapter.product.stock.repository.stock_available_repository'
             - '@prestashop.adapter.attribute.repository.attribute_repository'
             - '@prestashop.adapter.product.repository.product_repository'
+            - '@prestashop.adapter.product.image.repository.product_image_repository'
+            - '@prestashop.adapter.product.image.product_image_path_factory'
             - '@prestashop.core.util.number.number_extractor'
             - '@prestashop.adapter.tax.tax_computer'
             - "@=service('prestashop.adapter.legacy.context').getContext().language.id"

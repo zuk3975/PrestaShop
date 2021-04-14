@@ -32,6 +32,8 @@ use Combination;
 use DateTime;
 use PrestaShop\PrestaShop\Adapter\Attribute\Repository\AttributeRepository;
 use PrestaShop\PrestaShop\Adapter\Product\Combination\Repository\CombinationRepository;
+use PrestaShop\PrestaShop\Adapter\Product\Image\ProductImagePathFactory;
+use PrestaShop\PrestaShop\Adapter\Product\Image\Repository\ProductImageRepository;
 use PrestaShop\PrestaShop\Adapter\Product\Repository\ProductRepository;
 use PrestaShop\PrestaShop\Adapter\Product\Stock\Repository\StockAvailableRepository;
 use PrestaShop\PrestaShop\Adapter\Tax\TaxComputer;
@@ -41,9 +43,11 @@ use PrestaShop\PrestaShop\Core\Domain\Product\Combination\Query\GetCombinationFo
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryHandler\GetCombinationForEditingHandlerInterface;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationDetails;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationForEditing;
+use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationForEditingImage;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationPrices;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationStock;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\ValueObject\CombinationId;
+use PrestaShop\PrestaShop\Core\Domain\Product\Image\ValueObject\ImageId;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\ProductId;
 use PrestaShop\PrestaShop\Core\Domain\TaxRulesGroup\ValueObject\TaxRulesGroupId;
 use PrestaShop\PrestaShop\Core\Util\DateTime\DateTime as DateTimeUtil;
@@ -76,6 +80,11 @@ final class GetCombinationForEditingHandler implements GetCombinationForEditingH
     private $productRepository;
 
     /**
+     * @var ProductImageRepository
+     */
+    private $productImageRepository;
+
+    /**
      * @var int
      */
     private $contextLanguageId;
@@ -96,10 +105,17 @@ final class GetCombinationForEditingHandler implements GetCombinationForEditingH
     private $countryId;
 
     /**
+     * @var ProductImagePathFactory
+     */
+    private $productImagePathFactory;
+
+    /**
      * @param CombinationRepository $combinationRepository
      * @param StockAvailableRepository $stockAvailableRepository
      * @param AttributeRepository $attributeRepository
      * @param ProductRepository $productRepository
+     * @param ProductImageRepository $productImageRepository
+     * @param ProductImagePathFactory $productImagePathFactory
      * @param NumberExtractor $numberExtractor
      * @param TaxComputer $taxComputer
      * @param int $contextLanguageId
@@ -110,6 +126,8 @@ final class GetCombinationForEditingHandler implements GetCombinationForEditingH
         StockAvailableRepository $stockAvailableRepository,
         AttributeRepository $attributeRepository,
         ProductRepository $productRepository,
+        ProductImageRepository $productImageRepository,
+        ProductImagePathFactory $productImagePathFactory,
         NumberExtractor $numberExtractor,
         TaxComputer $taxComputer,
         int $contextLanguageId,
@@ -119,10 +137,12 @@ final class GetCombinationForEditingHandler implements GetCombinationForEditingH
         $this->stockAvailableRepository = $stockAvailableRepository;
         $this->attributeRepository = $attributeRepository;
         $this->productRepository = $productRepository;
+        $this->productImageRepository = $productImageRepository;
         $this->numberExtractor = $numberExtractor;
         $this->taxComputer = $taxComputer;
         $this->contextLanguageId = $contextLanguageId;
         $this->countryId = $countryId;
+        $this->productImagePathFactory = $productImagePathFactory;
     }
 
     /**
@@ -137,8 +157,37 @@ final class GetCombinationForEditingHandler implements GetCombinationForEditingH
             $this->getCombinationName($query->getCombinationId()),
             $this->getDetails($combination),
             $this->getPrices($combination, $product),
-            $this->getStock($combination)
+            $this->getStock($combination),
+            $this->getImages($query->getCombinationId())
         );
+    }
+
+    /**
+     * @param CombinationId $combinationId
+     *
+     * @return CombinationForEditingImage[]
+     */
+    private function getImages(CombinationId $combinationId): array
+    {
+        $combinationIdVal = $combinationId->getValue();
+        $imageIdsByCombinationId = $this->productImageRepository->getImagesIdsForCombinations([$combinationIdVal]);
+
+        if (!isset($imageIdsByCombinationId[$combinationIdVal][0])) {
+            return [];
+        }
+
+        $imageIds = $imageIdsByCombinationId[$combinationIdVal];
+
+        $combinationImages = [];
+        foreach ($imageIds as $imageId) {
+            $image = $this->productImageRepository->get(new ImageId($imageId));
+            $combinationImages[] = new CombinationForEditingImage(
+                $imageId,
+                $this->productImagePathFactory->getPathByType($image, ProductImagePathFactory::IMAGE_TYPE_SMALL_DEFAULT)
+            );
+        }
+
+        return $combinationImages;
     }
 
     /**
