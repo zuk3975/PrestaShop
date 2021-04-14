@@ -67,6 +67,7 @@ class CombinationFormDataProvider implements FormDataProviderInterface
             'stock' => $this->extractStockData($combinationForEditing),
             'price_impact' => $this->extractPriceImpactData($combinationForEditing),
             'details' => $this->extractDetailsData($combinationForEditing),
+            //@todo: unfinished images
         ];
     }
 

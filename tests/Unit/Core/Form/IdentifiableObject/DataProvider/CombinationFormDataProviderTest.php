@@ -37,6 +37,7 @@ use PrestaShop\PrestaShop\Core\CommandBus\CommandBusInterface;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\Query\GetCombinationForEditing;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationDetails;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationForEditing;
+use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationForEditingImage;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationPrices;
 use PrestaShop\PrestaShop\Core\Domain\Product\Combination\QueryResult\CombinationStock;
 use PrestaShop\PrestaShop\Core\Form\IdentifiableObject\DataProvider\CombinationFormDataProvider;
@@ -78,6 +79,7 @@ class CombinationFormDataProviderTest extends TestCase
             $this->getDatasetsForStock(),
             $this->getDatasetsForPriceImpact(),
             $this->getDatasetsForDetails(),
+            $this->getDatasetsForImages(),
         ];
 
         foreach ($datasetsByType as $datasetByType) {
@@ -203,6 +205,39 @@ class CombinationFormDataProviderTest extends TestCase
     }
 
     /**
+     * @return array
+     */
+    private function getDatasetsForImages(): array
+    {
+        $datasets = [];
+
+        $expectedOutputData = $this->getDefaultOutputData();
+        $imagesData = [];
+
+        $datasets[] = [
+            $imagesData,
+            $expectedOutputData,
+        ];
+
+        $imagesData = [
+            'image_ids' => [1, 2, 3],
+        ];
+
+        $expectedOutputData['image_ids'] = [
+            new CombinationForEditingImage(1, 'test/images/path/' . 1),
+            new CombinationForEditingImage(2, 'test/images/path/' . 2),
+            new CombinationForEditingImage(3, 'test/images/path/' . 3),
+        ];
+
+        $datasets[] = [
+            $imagesData,
+            $expectedOutputData,
+        ];
+
+        return $datasets;
+    }
+
+    /**
      * @param array $combinationData
      *
      * @return MockObject|CommandBusInterface
@@ -256,9 +291,32 @@ class CombinationFormDataProviderTest extends TestCase
             $this->createDetails($combination),
             $this->createPrices($combination),
             $this->createStock($combination),
-            //@todo add images
-            []
+            $this->createImages($combination)
         );
+    }
+
+    /**
+     * @param array<string, mixed> $combination
+     *
+     * @return CombinationForEditingImage[]
+     */
+    private function createImages(array $combination): array
+    {
+        if (!isset($combination['image_ids'])) {
+            return [];
+        }
+
+        $imageIds = $combination['image_ids'];
+        $combinationForEditingImages = [];
+
+        foreach ($imageIds as $imageId) {
+            $combinationForEditingImages[] = new CombinationForEditingImage(
+                $imageId,
+                'test/images/path/' . $imageId
+            );
+        }
+
+        return $combinationForEditingImages;
     }
 
     /**

@@ -28,15 +28,46 @@ declare(strict_types=1);
 
 namespace PrestaShopBundle\Form\Admin\Sell\Product\Combination;
 
+use PrestaShop\PrestaShop\Core\Form\FormChoiceAttributeProviderInterface;
+use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\HiddenType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 /**
  * Form to edit Combination details.
  */
 class CombinationFormType extends TranslatorAwareType
 {
+    /**
+     * @var FormChoiceProviderInterface
+     */
+    private $productImageIdsChoiceProvider;
+
+    /**
+     * @var FormChoiceAttributeProviderInterface
+     */
+    private $productImageAttrChoiceProvider;
+
+    /**
+     * @param TranslatorInterface $translator
+     * @param array $locales
+     * @param FormChoiceProviderInterface $productImageIdsChoiceProvider
+     * @param FormChoiceAttributeProviderInterface $productImageAttrChoiceProvider
+     */
+    public function __construct(
+        TranslatorInterface $translator,
+        array $locales,
+        FormChoiceProviderInterface $productImageIdsChoiceProvider,
+        FormChoiceAttributeProviderInterface $productImageAttrChoiceProvider
+    ) {
+        parent::__construct($translator, $locales);
+        $this->productImageIdsChoiceProvider = $productImageIdsChoiceProvider;
+        $this->productImageAttrChoiceProvider = $productImageAttrChoiceProvider;
+    }
+
     /**
      * @param FormBuilderInterface $builder
      * @param array $options
@@ -62,6 +93,10 @@ class CombinationFormType extends TranslatorAwareType
                 'label_attr' => [
                     'title' => 'h2',
                 ],
+            ])
+            ->add('image_ids', ChoiceType::class, [
+                'choices' => $this->productImageIdsChoiceProvider->getChoices(),
+                'choices_attr' => $this->productImageAttrChoiceProvider->getChoicesAttributes(),
             ])
         ;
     }
