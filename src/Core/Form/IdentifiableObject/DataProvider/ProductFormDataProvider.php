@@ -408,6 +408,7 @@ final class ProductFormDataProvider implements FormDataProviderInterface
                 'reference' => $details->getReference(),
             ],
             'customizations' => $this->extractCustomizationsData($productForEditing),
+            'attached_files' => $this->getAttachmentsData($productForEditing),
             'suppliers' => $this->extractSuppliersData($productForEditing),
         ];
     }
@@ -440,6 +441,18 @@ final class ProductFormDataProvider implements FormDataProviderInterface
 
         return [
             'customization_fields' => $fields,
+        ];
+    }
+
+    /**
+     * @param ProductForEditing $productForEditing
+     *
+     * @return array<string, mixed>
+     */
+    private function getAttachmentsData(ProductForEditing $productForEditing): array
+    {
+        return [
+            'attachment_ids' => $productForEditing->getAssociatedAttachmentIds(),
         ];
     }
 

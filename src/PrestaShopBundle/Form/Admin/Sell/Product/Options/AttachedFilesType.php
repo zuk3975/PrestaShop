@@ -27,19 +27,49 @@ declare(strict_types=1);
 
 namespace PrestaShopBundle\Form\Admin\Sell\Product\Options;
 
+use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 use PrestaShopBundle\Form\Admin\Type\IconButtonType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
+use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\CollectionType;
 use Symfony\Component\Form\FormBuilderInterface;
+use Symfony\Component\Translation\TranslatorInterface;
 
 class AttachedFilesType extends TranslatorAwareType
 {
+    /**
+     * @var FormChoiceProviderInterface
+     */
+    private $attachmentNameByIdChoiceProvider;
+
+    /**
+     * @param TranslatorInterface $translator
+     * @param array<int, array<string, mixed>> $locales
+     * @param FormChoiceProviderInterface $attachmentNameByIdChoiceProvider
+     */
+    public function __construct(
+        TranslatorInterface $translator,
+        array $locales,
+        FormChoiceProviderInterface $attachmentNameByIdChoiceProvider
+    ) {
+        parent::__construct($translator, $locales);
+        $this->attachmentNameByIdChoiceProvider = $attachmentNameByIdChoiceProvider;
+    }
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $builder
-            ->add('attachments_list', CollectionType::class, [
-                'entry_type' => ListedAttachmentType::class,
+            ->add('attachment_ids', ChoiceType::class, [
+                'choices' => $this->attachmentNameByIdChoiceProvider->getChoices(),
+                'expanded' => true,
+                'multiple' => true,
+                'required' => false,
+                // placeholder false is important to avoid empty option in select input despite required being false
+                'placeholder' => false,
             ])
+//            ->add('attachments_list', CollectionType::class, [
+//                'entry_type' => ListedAttachmentType::class,
+//            ])
             ->add('attach_new_file', IconButtonType::class, [
                 'label' => $this->trans('Attach a new file', 'Admin.Catalog.Feature'),
                 'icon' => 'add_circle',

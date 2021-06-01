@@ -1589,6 +1589,8 @@ services:
     form.type.sell.product.attached_files_type:
         class: 'PrestaShopBundle\Form\Admin\Sell\Product\Options\AttachedFilesType'
         parent: 'form.type.translatable.aware'
+        arguments:
+            - '@prestashop.adapter.form.choice_provider.attachment_name_by_id_choice_provider'
         public: true
         tags:
             - { name: form.type }

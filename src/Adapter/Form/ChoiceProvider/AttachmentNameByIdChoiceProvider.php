@@ -25,27 +25,47 @@
  */
 declare(strict_types=1);
 
-namespace PrestaShopBundle\Form\Admin\Sell\Product\Options;
+namespace PrestaShop\PrestaShop\Adapter\Form\ChoiceProvider;
 
-use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
-use Symfony\Component\Form\Extension\Core\Type\CheckboxType;
-use Symfony\Component\Form\Extension\Core\Type\TextType;
-use Symfony\Component\Form\FormBuilderInterface;
+use PrestaShop\PrestaShop\Adapter\Product\AttachmentDataProvider;
+use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
 
-class ListedAttachmentType extends TranslatorAwareType
+final class AttachmentNameByIdChoiceProvider implements FormChoiceProviderInterface
 {
-    public function buildForm(FormBuilderInterface $builder, array $options)
+    /**
+     * @var AttachmentDataProvider
+     */
+    private $attachmentDataProvider;
+
+    /**
+     * @var int
+     */
+    private $langId;
+
+    /**
+     * @param AttachmentDataProvider $attachmentDataProvider
+     * @param int $langId
+     */
+    public function __construct(
+        AttachmentDataProvider $attachmentDataProvider,
+        int $langId
+    ) {
+        $this->attachmentDataProvider = $attachmentDataProvider;
+        $this->langId = $langId;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    public function getChoices()
     {
-        $builder
-            ->add('attachment_id', CheckboxType::class, [
-                'label' => false,
-            ])
-            ->add('file_name', TextType::class, [
-                'label' => false,
-            ])
-            ->add('mime_type', TextType::class, [
-                'label' => false,
-            ])
-        ;
+        $allAttachments = $this->attachmentDataProvider->getAllAttachments($this->langId);
+        $choices = [];
+
+        foreach ($allAttachments as $attachment) {
+            $choices[$attachment['name']] = (int) $attachment['id_attachment'];
+        }
+
+        return $choices;
     }
 }
