@@ -1572,6 +1572,27 @@ services:
         class: 'PrestaShopBundle\Form\Admin\Sell\Product\EventListener\ProductTypeListener'
         public: true
 
+    form.type.sell.product.attachment_type:
+        class: 'PrestaShopBundle\Form\Admin\Sell\Product\Options\AttachmentType'
+        parent: 'form.type.translatable.aware'
+        public: true
+        tags:
+            - { name: form.type }
+
+    form.type.sell.product.listed_attachment_type:
+        class: 'PrestaShopBundle\Form\Admin\Sell\Product\Options\ListedAttachmentType'
+        parent: 'form.type.translatable.aware'
+        public: true
+        tags:
+            - { name: form.type }
+
+    form.type.sell.product.attached_files_type:
+        class: 'PrestaShopBundle\Form\Admin\Sell\Product\Options\AttachedFilesType'
+        parent: 'form.type.translatable.aware'
+        public: true
+        tags:
+            - { name: form.type }
+
     # Combination form types
 
     form.type.sell.product.combination_list_type:
