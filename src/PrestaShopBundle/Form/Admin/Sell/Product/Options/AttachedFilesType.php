@@ -27,7 +27,7 @@ declare(strict_types=1);
 
 namespace PrestaShopBundle\Form\Admin\Sell\Product\Options;
 
-use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
+use PrestaShop\PrestaShop\Core\Form\FormChoiceAttributeProviderInterface;
 use PrestaShopBundle\Form\Admin\Type\IconButtonType;
 use PrestaShopBundle\Form\Admin\Type\TranslatorAwareType;
 use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
@@ -38,35 +38,47 @@ use Symfony\Component\Translation\TranslatorInterface;
 class AttachedFilesType extends TranslatorAwareType
 {
     /**
-     * @var FormChoiceProviderInterface
+     * @var FormChoiceAttributeProviderInterface
      */
-    private $attachmentNameByIdChoiceProvider;
+    private $attachmentChoiceAttributesProvider;
 
     /**
      * @param TranslatorInterface $translator
      * @param array<int, array<string, mixed>> $locales
-     * @param FormChoiceProviderInterface $attachmentNameByIdChoiceProvider
+     * @param FormChoiceAttributeProviderInterface $attachmentChoiceAttributesProvider
      */
     public function __construct(
         TranslatorInterface $translator,
         array $locales,
-        FormChoiceProviderInterface $attachmentNameByIdChoiceProvider
+        FormChoiceAttributeProviderInterface $attachmentChoiceAttributesProvider
     ) {
         parent::__construct($translator, $locales);
-        $this->attachmentNameByIdChoiceProvider = $attachmentNameByIdChoiceProvider;
+        $this->attachmentChoiceAttributesProvider = $attachmentChoiceAttributesProvider;
     }
 
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
+        $attachmentsInfo = $this->attachmentChoiceAttributesProvider->getChoicesAttributes();
+
         $builder
             ->add('attachment_ids', ChoiceType::class, [
-                'choices' => $this->attachmentNameByIdChoiceProvider->getChoices(),
+                'choices' => array_keys($attachmentsInfo),
+                'choice_label' => function (int $attachmentId) use ($attachmentsInfo) {
+                    return $attachmentsInfo[$attachmentId]['name'];
+                },
+                'choice_attr' => function (int $attachmentId) use ($attachmentsInfo) {
+                    return [
+                        'data-file-name' => $attachmentsInfo[$attachmentId]['file_name'],
+                        'data-file-type' => $attachmentsInfo[$attachmentId]['file_type'],
+                    ];
+                },
                 'expanded' => true,
                 'multiple' => true,
                 'required' => false,
                 // placeholder false is important to avoid empty option in select input despite required being false
                 'placeholder' => false,
             ])
+//            @todo: ListedAttachmentType might not be needed, don't forget to remove it
 //            ->add('attachments_list', CollectionType::class, [
 //                'entry_type' => ListedAttachmentType::class,
 //            ])

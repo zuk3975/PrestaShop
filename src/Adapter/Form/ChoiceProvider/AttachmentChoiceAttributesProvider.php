@@ -28,9 +28,9 @@ declare(strict_types=1);
 namespace PrestaShop\PrestaShop\Adapter\Form\ChoiceProvider;
 
 use PrestaShop\PrestaShop\Adapter\Product\AttachmentDataProvider;
-use PrestaShop\PrestaShop\Core\Form\FormChoiceProviderInterface;
+use PrestaShop\PrestaShop\Core\Form\FormChoiceAttributeProviderInterface;
 
-final class AttachmentNameByIdChoiceProvider implements FormChoiceProviderInterface
+final class AttachmentChoiceAttributesProvider implements FormChoiceAttributeProviderInterface
 {
     /**
      * @var AttachmentDataProvider
@@ -57,13 +57,19 @@ final class AttachmentNameByIdChoiceProvider implements FormChoiceProviderInterf
     /**
      * {@inheritDoc}
      */
-    public function getChoices()
+    public function getChoicesAttributes()
     {
         $allAttachments = $this->attachmentDataProvider->getAllAttachments($this->langId);
         $choices = [];
 
         foreach ($allAttachments as $attachment) {
-            $choices[$attachment['name']] = (int) $attachment['id_attachment'];
+            $attachmentId = (int) $attachment['id_attachment'];
+            $choices[$attachmentId] = [
+                'attachment_id' => $attachmentId,
+                'name' => $attachment['name'],
+                'file_name' => $attachment['file_name'],
+                'file_type' => $attachment['mime'],
+            ];
         }
 
         return $choices;
