@@ -454,6 +454,7 @@ class CombinationController extends FrameworkBundleAdminController
                 'name' => $combination->getCombinationName(),
                 'reference' => $combination->getReference(),
                 'impact_on_price_te' => (string) $combination->getImpactOnPrice(),
+                'ecotax_tax_excluded' => (string) $combination->getEcotax(),
                 'quantity' => $combination->getQuantity(),
                 'is_default' => $combination->isDefault(),
                 'image_url' => $combination->getImageUrl() ?: $fallbackImageUrl,

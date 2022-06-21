@@ -67,6 +67,11 @@ class EditableCombinationForListing
     private $impactOnPrice;
 
     /**
+     * @var DecimalNumber
+     */
+    private $ecotax;
+
+    /**
      * @var int
      */
     private $quantity;
@@ -93,6 +98,7 @@ class EditableCombinationForListing
         array $attributesInformation,
         bool $default,
         DecimalNumber $impactOnPrice,
+        DecimalNumber $ecoTax,
         int $quantity,
         string $imageUrl
     ) {
@@ -102,6 +108,7 @@ class EditableCombinationForListing
         $this->reference = $reference;
         $this->default = $default;
         $this->impactOnPrice = $impactOnPrice;
+        $this->ecotax = $ecoTax;
         $this->quantity = $quantity;
         $this->imageUrl = $imageUrl;
     }
@@ -152,6 +159,14 @@ class EditableCombinationForListing
     public function getImpactOnPrice(): DecimalNumber
     {
         return $this->impactOnPrice;
+    }
+
+    /**
+     * @return DecimalNumber
+     */
+    public function getEcotax(): DecimalNumber
+    {
+        return $this->ecotax;
     }
 
     /**

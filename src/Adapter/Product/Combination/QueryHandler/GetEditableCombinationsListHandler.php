@@ -187,6 +187,7 @@ final class GetEditableCombinationsListHandler implements GetEditableCombination
                 $attributesInformationByCombinationId[$combinationId],
                 (bool) $combination['default_on'],
                 $impactOnPrice,
+                new DecimalNumber((string) $combination['ecotax']),
                 (int) $this->stockAvailableRepository->getForCombination(new CombinationId($combinationId))->quantity,
                 $imagePath
             );

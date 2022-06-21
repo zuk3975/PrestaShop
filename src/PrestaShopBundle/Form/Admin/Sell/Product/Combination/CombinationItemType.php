@@ -28,8 +28,12 @@ declare(strict_types=1);
 namespace PrestaShopBundle\Form\Admin\Sell\Product\Combination;
 
 use Currency;
+use PrestaShop\Decimal\DecimalNumber;
+use PrestaShop\PrestaShop\Adapter\Tax\TaxComputer;
 use PrestaShop\PrestaShop\Core\ConstraintValidator\Constraints\TypedRegex;
+use PrestaShop\PrestaShop\Core\Domain\Country\ValueObject\CountryId;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\Reference;
+use PrestaShop\PrestaShop\Core\Domain\TaxRulesGroup\ValueObject\TaxRulesGroupId;
 use PrestaShopBundle\Form\Admin\Type\ButtonCollectionType;
 use PrestaShopBundle\Form\Admin\Type\DeltaQuantityType;
 use PrestaShopBundle\Form\Admin\Type\IconButtonType;
@@ -45,6 +49,9 @@ use Symfony\Component\Form\FormInterface;
 use Symfony\Component\Form\FormView;
 use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Validator\Constraints\Length;
+use Symfony\Component\Validator\Constraints\NotBlank;
+use Symfony\Component\Validator\Constraints\PositiveOrZero;
+use Symfony\Component\Validator\Constraints\Type;
 
 class CombinationItemType extends TranslatorAwareType
 {
@@ -53,13 +60,47 @@ class CombinationItemType extends TranslatorAwareType
      */
     protected $defaultCurrency;
 
+    /**
+     * @var bool
+     */
+    private $isTaxEnabled;
+
+    /**
+     * @var bool
+     */
+    private $isEcotaxEnabled;
+
+    /**
+     * @var int
+     */
+    private $ecoTaxGroupId;
+
+    /**
+     * @var TaxComputer
+     */
+    private $taxComputer;
+    /**
+     * @var int
+     */
+    private $contextCountryId;
+
     public function __construct(
         TranslatorInterface $translator,
         array $locales,
-        Currency $defaultCurrency
+        Currency $defaultCurrency,
+        bool $isTaxEnabled,
+        bool $isEcotaxEnabled,
+        int $ecoTaxGroupId,
+        TaxComputer $taxComputer,
+        int $contextCountryId
     ) {
         parent::__construct($translator, $locales);
         $this->defaultCurrency = $defaultCurrency;
+        $this->isTaxEnabled = $isTaxEnabled;
+        $this->isEcotaxEnabled = $isEcotaxEnabled;
+        $this->ecoTaxGroupId = $ecoTaxGroupId;
+        $this->taxComputer = $taxComputer;
+        $this->contextCountryId = $contextCountryId;
     }
 
     /**
@@ -67,6 +108,15 @@ class CombinationItemType extends TranslatorAwareType
      */
     public function buildForm(FormBuilderInterface $builder, array $options): void
     {
+        if ($this->isTaxEnabled) {
+            $ecotaxRate = $this->taxComputer->getTaxRate(
+                new TaxRulesGroupId($this->ecoTaxGroupId),
+                new CountryId($this->contextCountryId)
+            );
+        } else {
+            $ecotaxRate = new DecimalNumber('0');
+        }
+
         $builder
             ->add('is_selected', CheckboxType::class, [
                 'label' => false,
@@ -126,61 +176,102 @@ class CombinationItemType extends TranslatorAwareType
                 'label' => $this->trans('Impact on price (tax incl.)', 'Admin.Catalog.Feature'),
                 'currency' => $this->defaultCurrency->iso_code,
             ])
-            ->add('final_price_te', TextPreviewType::class, [
-                'attr' => [
-                    'class' => 'combination-final-price',
-                    'data-order-by' => 'price',
-                ],
-                'label' => $this->trans('Final price (tax excl.)', 'Admin.Catalog.Feature'),
-            ])
-            ->add('delta_quantity', DeltaQuantityType::class, [
-                'attr' => [
-                    'data-order-by' => 'quantity',
-                ],
-                'delta_label' => false,
-                'label' => $this->trans('Quantity', 'Admin.Global'),
-            ])
-            ->add('is_default', RadioType::class, [
-                'label' => false,
-                'attr' => [
-                    'class' => 'combination-is-default-input',
-                ],
-            ])
-            ->add('actions', ButtonCollectionType::class, [
-                'buttons' => [
-                    'edit' => [
-                        'type' => IconButtonType::class,
-                        'options' => [
-                            'icon' => 'mode_edit',
-                            'attr' => [
-                                'class' => 'edit-combination-item tooltip-link',
-                                'data-toggle' => 'pstooltip',
-                                'data-original-title' => $this->trans('Edit', 'Admin.Actions'),
-                            ],
-                        ],
-                    ],
-                    'delete' => [
-                        'type' => IconButtonType::class,
-                        'options' => [
-                            'icon' => 'delete',
-                            'attr' => [
-                                'class' => 'delete-combination-item tooltip-link',
-                                'data-modal-title' => $this->trans('Delete item', 'Admin.Notifications.Warning'),
-                                'data-modal-message' => $this->trans('Delete selected item?', 'Admin.Notifications.Warning'),
-                                'data-modal-apply' => $this->trans('Delete', 'Admin.Actions'),
-                                'data-modal-cancel' => $this->trans('Cancel', 'Admin.Actions'),
-                                'data-toggle' => 'pstooltip',
-                                'data-original-title' => $this->trans('Delete', 'Admin.Actions'),
-                            ],
-                        ],
-                    ],
-                ],
-                'label' => $this->trans('Actions', 'Admin.Global'),
-                'attr' => [
-                    'class' => 'combination-row-actions',
-                ],
-            ])
         ;
+
+        if ($this->isEcotaxEnabled) {
+            $helpMessage = '';
+            if ($this->isTaxEnabled) {
+                $helpMessage = $this->trans('Ecotax rate %rate%%', 'Admin.Catalog.Feature', ['%rate%' => $ecotaxRate->round(2)]);
+            }
+
+            $builder
+                ->add('ecotax_tax_excluded', MoneyType::class, [
+                'label' => $this->trans('Ecotax (tax excl.)', 'Admin.Catalog.Feature'),
+                'constraints' => [
+                    new NotBlank(),
+                    new Type(['type' => 'float']),
+                    new PositiveOrZero(),
+                ],
+                'currency' => $this->defaultCurrency->iso_code,
+                'modify_all_shops' => true,
+                'attr' => [
+                    'class' => 'combination-ecotax-tax-excluded',
+                    'data-tax-rate' => (string) $ecotaxRate,
+                ],
+                'row_attr' => [
+                    'class' => 'ecotax-tax-excluded',
+                ],
+            ])->add('ecotax_tax_included', MoneyType::class, [
+                'label' => $this->trans('Ecotax (tax incl.)', 'Admin.Catalog.Feature'),
+                'help' => $helpMessage,
+                'constraints' => [
+                    new NotBlank(),
+                    new Type(['type' => 'float']),
+                    new PositiveOrZero(),
+                ],
+                'currency' => $this->defaultCurrency->iso_code,
+                'modify_all_shops' => true,
+                'attr' => [
+                    'class' => 'combination-ecotax-tax-included',
+                    'data-tax-rate' => (string) $ecotaxRate,
+                ],
+                'row_attr' => [
+                    'class' => 'ecotax-tax-included',
+                ],
+            ]);
+        }
+
+        $builder->add('final_price_te', TextPreviewType::class, [
+            'attr' => [
+                'class' => 'combination-final-price',
+                'data-order-by' => 'price',
+            ],
+            'label' => $this->trans('Final price (tax excl.)', 'Admin.Catalog.Feature'),
+        ])->add('delta_quantity', DeltaQuantityType::class, [
+            'attr' => [
+                'data-order-by' => 'quantity',
+            ],
+            'delta_label' => false,
+            'label' => $this->trans('Quantity', 'Admin.Global'),
+        ])->add('is_default', RadioType::class, [
+            'label' => false,
+            'attr' => [
+                'class' => 'combination-is-default-input',
+            ],
+        ])->add('actions', ButtonCollectionType::class, [
+            'buttons' => [
+                'edit' => [
+                    'type' => IconButtonType::class,
+                    'options' => [
+                        'icon' => 'mode_edit',
+                        'attr' => [
+                            'class' => 'edit-combination-item tooltip-link',
+                            'data-toggle' => 'pstooltip',
+                            'data-original-title' => $this->trans('Edit', 'Admin.Actions'),
+                        ],
+                    ],
+                ],
+                'delete' => [
+                    'type' => IconButtonType::class,
+                    'options' => [
+                        'icon' => 'delete',
+                        'attr' => [
+                            'class' => 'delete-combination-item tooltip-link',
+                            'data-modal-title' => $this->trans('Delete item', 'Admin.Notifications.Warning'),
+                            'data-modal-message' => $this->trans('Delete selected item?', 'Admin.Notifications.Warning'),
+                            'data-modal-apply' => $this->trans('Delete', 'Admin.Actions'),
+                            'data-modal-cancel' => $this->trans('Cancel', 'Admin.Actions'),
+                            'data-toggle' => 'pstooltip',
+                            'data-original-title' => $this->trans('Delete', 'Admin.Actions'),
+                        ],
+                    ],
+                ],
+            ],
+            'label' => $this->trans('Actions', 'Admin.Global'),
+            'attr' => [
+                'class' => 'combination-row-actions',
+            ],
+        ]);
     }
 
     /**
