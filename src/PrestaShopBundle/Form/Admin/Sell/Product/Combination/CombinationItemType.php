@@ -196,7 +196,7 @@ class CombinationItemType extends TranslatorAwareType
                 'modify_all_shops' => true,
                 'attr' => [
                     'class' => 'combination-ecotax-tax-excluded',
-                    'data-tax-rate' => (string) $ecotaxRate,
+                    'data-ecotax-rate' => (string) $ecotaxRate,
                 ],
                 'row_attr' => [
                     'class' => 'ecotax-tax-excluded',
@@ -213,7 +213,6 @@ class CombinationItemType extends TranslatorAwareType
                 'modify_all_shops' => true,
                 'attr' => [
                     'class' => 'combination-ecotax-tax-included',
-                    'data-tax-rate' => (string) $ecotaxRate,
                 ],
                 'row_attr' => [
                     'class' => 'ecotax-tax-included',
