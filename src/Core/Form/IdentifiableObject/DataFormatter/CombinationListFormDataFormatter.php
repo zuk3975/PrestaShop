@@ -46,6 +46,7 @@ class CombinationListFormDataFormatter extends AbstractFormDataFormatter
             '[reference]' => '[references][reference]',
             '[impact_on_price_te]' => '[price_impact][price_tax_excluded]',
             '[impact_on_price_ti]' => '[price_impact][price_tax_included]',
+            '[ecotax_tax_excluded]' => '[price_impact][ecotax_tax_excluded]',
             '[delta_quantity][delta]' => '[stock][quantities][delta_quantity][delta]',
             '[is_default]' => '[is_default]',
         ];

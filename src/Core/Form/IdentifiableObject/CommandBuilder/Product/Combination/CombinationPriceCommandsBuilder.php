@@ -45,20 +45,20 @@ class CombinationPriceCommandsBuilder implements CombinationCommandsBuilderInter
             return [];
         }
 
-        $quantityData = $formData['price_impact'];
+        $priceData = $formData['price_impact'];
         $command = new UpdateCombinationPricesCommand($combinationId->getValue());
 
-        if (isset($quantityData['price_tax_excluded'])) {
-            $command->setImpactOnPrice((string) $quantityData['price_tax_excluded']);
+        if (isset($priceData['price_tax_excluded'])) {
+            $command->setImpactOnPrice((string) $priceData['price_tax_excluded']);
         }
-        if (isset($quantityData['ecotax_tax_excluded'])) {
-            $command->setEcoTax((string) $quantityData['ecotax_tax_excluded']);
+        if (isset($priceData['ecotax_tax_excluded'])) {
+            $command->setEcoTax((string) $priceData['ecotax_tax_excluded']);
         }
-        if (isset($quantityData['unit_price_tax_excluded'])) {
-            $command->setImpactOnUnitPrice((string) $quantityData['unit_price_tax_excluded']);
+        if (isset($priceData['unit_price_tax_excluded'])) {
+            $command->setImpactOnUnitPrice((string) $priceData['unit_price_tax_excluded']);
         }
-        if (isset($quantityData['wholesale_price'])) {
-            $command->setWholesalePrice((string) $quantityData['wholesale_price']);
+        if (isset($priceData['wholesale_price'])) {
+            $command->setWholesalePrice((string) $priceData['wholesale_price']);
         }
 
         return [$command];
