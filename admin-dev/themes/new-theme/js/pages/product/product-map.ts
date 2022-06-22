@@ -129,6 +129,8 @@ export default {
       combinationRow: '.combination-list-row',
       priceImpactTaxExcluded: '.combination-impact-on-price-tax-excluded',
       priceImpactTaxIncluded: '.combination-impact-on-price-tax-included',
+      ecotaxTaxExcluded: '.combination-ecotax-tax-excluded',
+      ecotaxTaxIncluded: '.combination-ecotax-tax-included',
       isDefault: '.combination-is-default-input',
       finalPrice: '.combination-final-price',
       finalPricePreview: '.text-preview',

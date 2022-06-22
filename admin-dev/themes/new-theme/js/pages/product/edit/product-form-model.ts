@@ -121,6 +121,10 @@ export default class ProductFormModel {
     return this.mapper.getBigNumber('price.priceTaxExcluded') ?? new BigNumber(0);
   }
 
+  getPriceTaxIncluded(): BigNumber {
+    return this.mapper.getBigNumber('price.priceTaxIncluded') ?? new BigNumber(0);
+  }
+
   displayPrice(price: BigNumber): string {
     return this.numberFormatter.format(price.toNumber());
   }
@@ -143,6 +147,10 @@ export default class ProductFormModel {
     }
 
     return price.times(taxRatio).toFixed(this.precision);
+  }
+
+  getPrecision(): number {
+    return this.precision;
   }
 
   /**

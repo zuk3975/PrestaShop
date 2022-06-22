@@ -62,6 +62,8 @@ export default class CombinationsListRenderer {
 
   private sortingEnabled = true;
 
+  private readonly precision: number
+
   constructor(
     eventEmitter: EventEmitter,
     productFormModel: ProductFormModel,
@@ -74,6 +76,7 @@ export default class CombinationsListRenderer {
     this.emptyStateCallback = emptyStateCallback;
     this.$loadingSpinner = $(ProductMap.combinations.loadingSpinner);
     this.$combinationsListContainer = $(ProductMap.combinations.combinationsFormContainer);
+    this.precision = this.productFormModel.getPrecision();
 
     // We can't keep a reference on the table (or its content) since it can be updated via ajax, we always get it just in time
     const $combinationsTable = this.getCombinationsTable();
@@ -108,6 +111,14 @@ export default class CombinationsListRenderer {
 
     this.$combinationsListContainer.on('change', CombinationsMap.list.priceImpactTaxIncluded, (event: ChangeEvent) => {
       this.updateByPriceImpactTaxIncluded($(event.currentTarget));
+    });
+
+    this.$combinationsListContainer.on('change', CombinationsMap.list.ecotaxTaxExcluded, (event: ChangeEvent) => {
+      this.updateByEcotaxTaxExcluded($(event.currentTarget));
+    });
+
+    this.$combinationsListContainer.on('change', CombinationsMap.list.ecotaxTaxIncluded, (event: ChangeEvent) => {
+      this.updateByEcotaxTaxIncluded($(event.currentTarget));
     });
 
     this.$combinationsListContainer.on('click', CombinationsMap.list.isDefault, (event) => {
@@ -202,6 +213,7 @@ export default class CombinationsListRenderer {
         $(CombinationsMap.list.isDefault, $row).prop('checked', true);
       }
       this.updateByPriceImpactTaxExcluded($(CombinationsMap.list.priceImpactTaxExcluded, $row));
+      this.updateByEcotaxTaxExcluded($(CombinationsMap.list.ecotaxTaxExcluded, $row));
 
       // JS event to allow external module to change the row, add listeners, ... before it is added
       this.eventEmitter.emit(ProductEventMap.combinations.buildCombinationRow, {combination, $row});
@@ -272,11 +284,52 @@ export default class CombinationsListRenderer {
     this.updateFinalPrice(priceImpactTaxIncluded.dividedBy(taxRatio), $row);
   }
 
+  //@todo: impactTaxIncl still not the same as in combination form, seems to do smth with produc tax rules.
+  private updateByEcotaxTaxExcluded($ecotaxTaxExcluded: JQuery) {
+    const $row = $ecotaxTaxExcluded.parents(CombinationsMap.list.combinationRow);
+    const ecoTaxRatio = this.getEcoTaxRatio($row);
+    const ecotaxTaxExcluded = new BigNumber(<string>$ecotaxTaxExcluded.val() ?? '0');
+    const ecotaxTaxIncluded = ecotaxTaxExcluded.times(ecoTaxRatio);
+
+    const productTaxRatio = this.getProductTaxRatio();
+    const productPriceTaxIncluded: BigNumber = this.productFormModel.getPriceTaxIncluded();
+
+    const impactPriceTaxIncluded: BigNumber = productPriceTaxIncluded
+      .minus(ecotaxTaxIncluded)
+      .minus(productPriceTaxIncluded);
+
+    $(CombinationsMap.list.priceImpactTaxIncluded, $row).val(
+      impactPriceTaxIncluded.toFixed(this.precision),
+    );
+
+    $(CombinationsMap.list.priceImpactTaxExcluded, $row).val(
+      impactPriceTaxIncluded
+        .dividedBy(productTaxRatio)
+        .toFixed(this.precision),
+    );
+
+    $(CombinationsMap.list.ecotaxTaxIncluded, $row).val(ecotaxTaxIncluded.toFixed(this.precision));
+    this.updateFinalPrice(this.getImpactTaxExcluded($row), $row);
+  }
+
+  private updateByEcotaxTaxIncluded($ecotaxTaxIncluded: JQuery) {
+    const $row = $ecotaxTaxIncluded.parents(CombinationsMap.list.combinationRow);
+
+    // Only this update is needed here, the rest will be updated via the trigger for price.ecotaxTaxExcluded
+    const ecoTaxRatio = this.getEcoTaxRatio($row);
+    const ecotaxTaxIncluded = new BigNumber(<string> $ecotaxTaxIncluded.val() ?? '0');
+
+    $(CombinationsMap.list.ecotaxTaxExcluded, $row).val(ecotaxTaxIncluded.dividedBy(ecoTaxRatio).toString(this.precision));
+    this.updateFinalPrice(this.getImpactTaxExcluded($row), $row);
+  }
+
   private updateFinalPrice(priceImpactTaxExcluded: BigNumber, $row: JQuery) {
     const productPrice = this.productFormModel.getPriceTaxExcluded();
     const $finalPrice = $(CombinationsMap.list.finalPrice, $row);
     const $finalPricePreview = $finalPrice.siblings(CombinationsMap.list.finalPricePreview);
-    const finalPrice = this.productFormModel.displayPrice(productPrice.plus(priceImpactTaxExcluded));
+    const finalPrice = this.productFormModel.displayPrice(
+      productPrice.plus(priceImpactTaxExcluded).plus(this.getEcotaxTaxExcluded($row)),
+    );
 
     if (typeof $finalPrice !== 'undefined') {
       $finalPrice.val(finalPrice);
@@ -285,5 +338,92 @@ export default class CombinationsListRenderer {
     if (typeof $finalPricePreview !== 'undefined') {
       $finalPricePreview.html(finalPrice);
     }
+  }
+
+  private getEcoTaxRatio($row: JQuery): BigNumber {
+    const $ecotaxTaxExcluded = $(CombinationsMap.list.ecotaxTaxExcluded, $row);
+
+    if (!$ecotaxTaxExcluded) {
+      return new BigNumber(1);
+    }
+
+    let taxRate;
+    try {
+      taxRate = new BigNumber($ecotaxTaxExcluded.data('ecotaxRate'));
+    } catch (error) {
+      taxRate = new BigNumber(NaN);
+    }
+    if (taxRate.isNaN()) {
+      taxRate = new BigNumber(0);
+    }
+
+    return taxRate.dividedBy(100).plus(1);
+  }
+
+  private getImpactTaxExcluded($row: JQuery): BigNumber {
+    const $priceImpactTaxExcluded = $(CombinationsMap.list.priceImpactTaxExcluded, $row);
+
+    if (isUndefined($row) || isUndefined($priceImpactTaxExcluded)) {
+      return new BigNumber(0);
+    }
+
+    return new BigNumber(Number($priceImpactTaxExcluded.val()));
+  }
+
+  private getImpactTaxIncluded($row: JQuery): BigNumber {
+    const $priceImpactTaxIncluded = $(CombinationsMap.list.priceImpactTaxIncluded, $row);
+
+    if (isUndefined($row) || isUndefined($priceImpactTaxIncluded)) {
+      return new BigNumber(0);
+    }
+
+    return new BigNumber(Number($priceImpactTaxIncluded.val()));
+  }
+
+  private getEcotaxTaxIncluded($row: JQuery): BigNumber {
+    const $ecotaxTaxIncluded = $(CombinationsMap.list.ecotaxTaxIncluded, $row);
+
+    if (isUndefined($row) || isUndefined($ecotaxTaxIncluded)) {
+      return new BigNumber(0);
+    }
+
+    return new BigNumber(Number($ecotaxTaxIncluded.val()));
+  }
+
+  private getEcotaxTaxExcluded($row: JQuery): BigNumber {
+    const $ecotaxTaxExcluded = $(CombinationsMap.list.ecotaxTaxExcluded, $row);
+
+    if (isUndefined($row) || isUndefined($ecotaxTaxExcluded)) {
+      return new BigNumber(0);
+    }
+
+    return new BigNumber(Number($ecotaxTaxExcluded.val()));
+  }
+
+  getProductTaxRatio(): BigNumber {
+    const $taxRulesGroupIdInput = $('input[name="product[pricing][retail_price][tax_rules_group_id]"]');
+
+    if (!$taxRulesGroupIdInput) {
+      console.error('Could not find tax rules input');
+      return new BigNumber(NaN);
+    }
+
+    const isTaxEnabled = $taxRulesGroupIdInput.data('taxEnabled');
+
+    if (!isTaxEnabled) {
+      return new BigNumber(1);
+    }
+
+    let taxRate;
+    try {
+      taxRate = new BigNumber($(':selected', $taxRulesGroupIdInput).data('taxRate'));
+    } catch (error) {
+      taxRate = new BigNumber(NaN);
+    }
+    if (taxRate.isNaN()) {
+      taxRate = new BigNumber(0);
+    }
+
+    return taxRate.dividedBy(100).plus(1);
   }
 }
