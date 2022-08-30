@@ -365,6 +365,13 @@ class HelperListConfiguration
     private $postSubmitUrl;
 
     /**
+     * Url for updating positions in a list.
+     *
+     * @var string|null
+     */
+    private $updatePositionUrl;
+
+    /**
      * If true - joins related shop tables when querying sql.
      *
      * @see AdminController::$shopShareDatas
@@ -409,7 +416,8 @@ class HelperListConfiguration
         bool $bootstrap,
         string $legacyCurrentIndex,
         int $multiShopContext,
-        string $postSubmitUrl
+        string $postSubmitUrl,
+        ?string $updatePositionUrl
     ) {
         $this->tabId = $tabId;
         $this->tableName = $tableName;
@@ -428,6 +436,7 @@ class HelperListConfiguration
         $this->legacyCurrentIndex = $legacyCurrentIndex;
         $this->multiShopContext = $multiShopContext;
         $this->postSubmitUrl = $postSubmitUrl;
+        $this->updatePositionUrl = $updatePositionUrl;
     }
 
     /**
@@ -806,5 +815,13 @@ class HelperListConfiguration
         $this->shopShareData = $shopShareData;
 
         return $this;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getUpdatePositionUrl(): ?string
+    {
+        return $this->updatePositionUrl;
     }
 }

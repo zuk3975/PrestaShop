@@ -43,6 +43,7 @@ use PrestaShopBundle\Bridge\Smarty\BreadcrumbsAndTitleConfigurator;
 use PrestaShopBundle\Service\DataProvider\UserProvider;
 use PrestaShopException;
 use Shop;
+use Symfony\Component\Routing\RouterInterface;
 use Tools;
 use Validate;
 
@@ -114,10 +115,17 @@ class HelperListBridge
             return null;
         }
 
-        return $this
+        $listContent = $this
             ->buildHelperList($helperListConfiguration)
             ->generateList($helperListConfiguration->list, $helperListConfiguration->fieldsList)
         ;
+
+        // assign js def for ajax positioning action
+        \Media::addJsDef([
+            'updatePositionUrl' => $helperListConfiguration->getUpdatePositionUrl(),
+        ]);
+
+        return $listContent;
     }
 
     /**

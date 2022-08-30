@@ -74,11 +74,17 @@ class HelperListConfigurationFactory
         bool $deleted = false,
         bool $explicitSelect = false,
         bool $useFoundRows = true,
-        ?string $listId = null
+        ?string $listId = null,
+        ?string $updatePositionRoute = null
     ): HelperListConfiguration {
         if (empty($defaultOrderBy)) {
             $defaultOrderBy = $identifierKey;
         }
+
+        $updatePositionUrl = $updatePositionRoute ? $this->router->generate($updatePositionRoute, [
+            'identifierKey' => $identifierKey,
+            'className' => $controllerConfiguration->objectModelClassName
+        ]): null;
 
         return new HelperListConfiguration(
             $controllerConfiguration->tabId,
@@ -97,7 +103,8 @@ class HelperListConfigurationFactory
             $controllerConfiguration->bootstrap,
             $controllerConfiguration->legacyCurrentIndex,
             $controllerConfiguration->multiShopContext,
-            $this->router->generate($postSubmitRoute)
+            $this->router->generate($postSubmitRoute),
+            $updatePositionUrl
         );
     }
 }

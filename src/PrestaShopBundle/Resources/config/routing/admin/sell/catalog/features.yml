@@ -25,3 +25,10 @@ admin_features_edit:
       id_feature: featureId
   requirements:
     featureId: \d+
+
+admin_features_update_position:
+  path: /update-position-bridge
+  methods: [ POST ]
+  defaults:
+    _controller: PrestaShopBundle\Controller\Admin\Sell\Catalog\FeatureController::updatePositionBridgeAction
+    _legacy_controller: AdminFeatures

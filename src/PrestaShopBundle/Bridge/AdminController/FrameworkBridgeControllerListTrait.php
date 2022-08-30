@@ -29,13 +29,56 @@ declare(strict_types=1);
 namespace PrestaShopBundle\Bridge\AdminController;
 
 use PrestaShopBundle\Bridge\Helper\Listing\HelperListConfiguration;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 /**
  * Contains the principal methods you need to horizontally migrate a controller which has a list.
  */
 trait FrameworkBridgeControllerListTrait
 {
+    /**
+     * See dnd.js for javascript part
+     *
+     * @param Request $request
+     *
+     * @return JsonResponse
+     */
+    public function updatePositionBridgeAction(Request $request): JsonResponse
+    {
+        $identifierKey = $request->query->get('identifierKey');
+        // fallback to "id" because else it won't work for some lists (as not all identifierKeys mapped in dnd.js)
+        $objectId = $request->request->getInt($identifierKey, $request->request->getInt('id'));
+        $className = $request->query->get('className');
+
+        if (!$objectId || !$className) {
+            return $this->json([
+                'errorMessage' => 'Object id or className is missing in request for position update.',
+                Response::HTTP_BAD_REQUEST
+            ]);
+        }
+
+        /** @var \ObjectModel $objectModel */
+        $objectModel = new $className($objectId);
+
+        if (!method_exists($objectModel, 'updatePosition')) {
+            return $this->json([
+                'errorMessage' => sprintf('method "updatePosition" not found in class %s', $className),
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            ]);
+        }
+
+        if (!$objectModel->updatePosition($request->request->getInt('way'), $request->request->getInt('position'))) {
+            return $this->json([
+                'errorMessage' => 'Failed to update position',
+                Response::HTTP_BAD_REQUEST
+            ]);
+        }
+
+        return $this->json('ok', Response::HTTP_OK);
+    }
+
     /**
      * @param string $identifierKey @see HelperListConfiguration::$identifierKey
      * @param string $positionIdentifierKey @see HelperListConfiguration::$positionIdentifierKey
@@ -54,6 +97,7 @@ trait FrameworkBridgeControllerListTrait
         string $positionIdentifierKey,
         string $defaultOrderBy,
         string $postSubmitRoute,
+        ?string $updatePositionRoute = null,
         bool $autoJoinLangTable = true,
         bool $deleted = false,
         bool $explicitSelect = false,
@@ -72,7 +116,8 @@ trait FrameworkBridgeControllerListTrait
             $deleted,
             $explicitSelect,
             $useFoundRows,
-            $listId
+            $listId,
+            $updatePositionRoute
         );
     }
 
