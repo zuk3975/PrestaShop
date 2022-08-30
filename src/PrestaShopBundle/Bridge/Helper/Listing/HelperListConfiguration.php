@@ -763,11 +763,13 @@ class HelperListConfiguration
                 'havingFilter',
                 'icon',
                 'list',
+                'type'
             ])
             ->addAllowedTypes('title', 'string')
             ->addAllowedTypes('orderby', 'boolean')
             ->addAllowedTypes('search', 'boolean')
             ->addAllowedTypes('havingFilter', 'boolean')
+            ->addAllowedTypes('type', ['string', 'null'])
             ->setDefaults([
                 'havingFilter' => false,
             ])

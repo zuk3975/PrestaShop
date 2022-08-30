@@ -100,6 +100,7 @@ class FiltersProcessor
                 } elseif (stripos($key, 'submitFilter') === 0) {
                     $this->context->cookie->$key = !is_array($value) ? $value : json_encode($value);
                 }
+                //@todo: sorting doesn't work. PostSubmitUrl probably not handled
                 if (stripos($key, $helperListConfiguration->getListId() . 'Orderby') === 0 && Validate::isOrderBy($value)) {
                     if ($value === '' || $value == $helperListConfiguration->getDefaultOrderBy()) {
                         unset($this->context->cookie->{$prefix . $key});
