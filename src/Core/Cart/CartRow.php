@@ -327,6 +327,7 @@ class CartRow
         if ((int) $cart->id) {
             $cacheId = sprintf(self::PRODUCT_PRICE_CACHE_ID_PATTERN, (int) $productId, (int) $cart->id);
             if (!$this->cacheAdapter->isStored($cacheId)
+                    //@todo: what this check supposed to do?
                 || ($cartQuantity = $this->cacheAdapter->retrieve($cacheId)
                                     != (int) $quantity)) {
                 $sql = 'SELECT SUM(`quantity`)

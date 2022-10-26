@@ -618,6 +618,93 @@ class CartCore extends ObjectModel
         return false;
     }
 
+    // @todo: poc
+    public function getProductsForPricing(): array
+    {
+        if (!$this->id) {
+            return [];
+        }
+
+        // Build query
+        $sql = new DbQuery();
+
+        // Build SELECT
+        $sql->select('cp.`id_product_attribute`, cp.`id_product`, cp.`quantity` AS cart_quantity, cp.id_shop, cp.`id_customization`, p.`is_virtual`,
+                        product_shop.`id_category_default`, product_shop.`on_sale`, product_shop.`ecotax`, product_shop.`additional_shipping_cost`,
+                        product_shop.`available_for_order`, product_shop.`show_price`, product_shop.`price`, product_shop.`active`, product_shop.`unity`, product_shop.`unit_price`,
+                        stock.`quantity` AS quantity_available, p.`width`, p.`height`, p.`depth`, stock.`out_of_stock`, p.`weight`,
+                        p.`available_date`, IFNULL(stock.quantity, 0) as quantity,
+                        cp.id_address_delivery,
+                        product_shop.advanced_stock_management');
+
+        // Build FROM
+        $sql->from('cart_product', 'cp');
+
+        // Build JOIN
+        $sql->leftJoin('product', 'p', 'p.`id_product` = cp.`id_product`');
+        $sql->innerJoin('product_shop', 'product_shop', '(product_shop.`id_shop` = cp.`id_shop` AND product_shop.`id_product` = p.`id_product`)');
+
+        // @todo test if everything is ok, then refactorise call of this method
+        $sql->join(Product::sqlStock('cp', 'cp'));
+
+        // Build WHERE clauses
+        $sql->where('cp.`id_cart` = ' . (int) $this->id);
+        $sql->where('p.`id_product` IS NOT NULL');
+
+        if (Customization::isFeatureActive()) {
+            $sql->select('cu.`id_customization`, cu.`quantity` AS customization_quantity');
+            $sql->leftJoin(
+                'customization',
+                'cu',
+                'p.`id_product` = cu.`id_product` AND cp.`id_product_attribute` = cu.`id_product_attribute` AND cp.`id_customization` = cu.`id_customization` AND cu.`id_cart` = ' . (int) $this->id
+            );
+            $sql->groupBy('cp.`id_product_attribute`, cp.`id_product`, cp.`id_shop`, cp.`id_customization`');
+        } else {
+            $sql->select('NULL AS customization_quantity, NULL AS id_customization');
+        }
+
+        if (Combination::isFeatureActive()) {
+            $sql->select('
+                product_attribute_shop.`price` AS price_attribute,
+                product_attribute_shop.`ecotax` AS ecotax_attr,
+                IF (IFNULL(pa.`reference`, \'\') = \'\', p.`reference`, pa.`reference`) AS reference,
+                (p.`weight`+ IFNULL(product_attribute_shop.`weight`, pa.`weight`)) weight_attribute,
+                IF (IFNULL(pa.`ean13`, \'\') = \'\', p.`ean13`, pa.`ean13`) AS ean13,
+                IF (IFNULL(pa.`isbn`, \'\') = \'\', p.`isbn`, pa.`isbn`) AS isbn,
+                IF (IFNULL(pa.`upc`, \'\') = \'\', p.`upc`, pa.`upc`) AS upc,
+                IF (IFNULL(pa.`mpn`, \'\') = \'\', p.`mpn`, pa.`mpn`) AS mpn,
+                IFNULL(product_attribute_shop.`minimal_quantity`, product_shop.`minimal_quantity`) as minimal_quantity,
+                IF(product_attribute_shop.wholesale_price > 0,  product_attribute_shop.wholesale_price, product_shop.`wholesale_price`) wholesale_price
+            ');
+
+            $sql->leftJoin('product_attribute', 'pa', 'pa.`id_product_attribute` = cp.`id_product_attribute`');
+            $sql->leftJoin('product_attribute_shop', 'product_attribute_shop', '(product_attribute_shop.`id_shop` = cp.`id_shop` AND product_attribute_shop.`id_product_attribute` = pa.`id_product_attribute`)');
+        } else {
+            $sql->select(
+                'p.`reference` AS reference, p.`ean13`, p.`isbn`,
+                p.`upc` AS upc, p.`mpn` AS mpn, product_shop.`minimal_quantity` AS minimal_quantity, product_shop.`wholesale_price` wholesale_price'
+            );
+        }
+
+        /** @var array<string, mixed>|false $products */
+        $products = Db::getInstance()->executeS($sql);
+
+        if (is_iterable($products)) {
+            foreach ($products as $key => $product) {
+                $specific_price = SpecificPrice::getSpecificPrice($product['id_product'], $this->id_shop, $this->id_currency, null, $this->id_shop_group, $product['cart_quantity'], $product['id_product_attribute'], $this->id_customer, $this->id);
+                if ($specific_price) {
+                    $reduction_type_row = ['reduction_type' => $specific_price['reduction_type']];
+                } else {
+                    $reduction_type_row = ['reduction_type' => 0];
+                }
+
+                $products[$key] = array_merge($product, $reduction_type_row);
+            }
+        }
+
+        return $products;
+    }
+
     /**
      * Return cart products.
      *
@@ -2124,7 +2211,11 @@ class CartCore extends ObjectModel
 
         // filter products
         if (null === $products) {
-            $products = $this->getProducts(false, false, null, true, $keepOrderPrices);
+            if (empty($this->productsForPricing)) {
+                $this->productsForPricing = $this->getProductsForPricing();
+            }
+            $products = $this->productsForPricing;
+//            $products = $this->getProducts(false, false, null, true, $keepOrderPrices);
         }
 
         if ($type == Cart::ONLY_PHYSICAL_PRODUCTS_WITHOUT_SHIPPING) {
@@ -4061,6 +4152,7 @@ class CartCore extends ObjectModel
             return false;
         }
 
+        //@todo: probably also can use other query, just with the references and quantities
         foreach ($this->getProducts() as $product) {
             if (
                 !$this->allow_seperated_package

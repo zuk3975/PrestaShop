@@ -607,6 +607,7 @@ class CartControllerCore extends FrontController
      */
     protected function areProductsAvailable()
     {
+        // @todo: this seems to only be used to check if product type changed. Can be dedicated little query instead
         $products = $this->context->cart->getProducts();
 
         foreach ($products as $product) {
