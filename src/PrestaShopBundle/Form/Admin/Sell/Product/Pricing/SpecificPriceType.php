@@ -124,8 +124,15 @@ class SpecificPriceType extends TranslatorAwareType
             $builder->add('combination_id', ChoiceType::class, [
                 'label' => $this->trans('Combination', 'Admin.Global'),
                 'placeholder' => $this->trans('All combinations', 'Admin.Global'),
-                'choices' => $this->combinationIdChoiceProvider->getChoices(['product_id' => $builder->getData()['product_id']]),
+                'choices' => $this->combinationIdChoiceProvider->getChoices([
+                    'product_id' => $builder->getData()['product_id'],
+                    'shop_id' => $builder->getData()['groups']['shop_id'] ?? null,
+                ]),
                 'required' => false,
+                'attr' => [
+                    'data-toggle' => 'select2',
+                    'data-minimumResultsForSearch' => '3',
+                ],
             ]);
         }
 

@@ -28,9 +28,11 @@ declare(strict_types=1);
 namespace PrestaShop\PrestaShop\Adapter\Form\ChoiceProvider;
 
 use PrestaShop\PrestaShop\Adapter\Attribute\Repository\AttributeRepository;
+use PrestaShop\PrestaShop\Adapter\Product\Combination\Repository\CombinationMultiShopRepository;
 use PrestaShop\PrestaShop\Adapter\Product\Combination\Repository\CombinationRepository;
 use PrestaShop\PrestaShop\Core\Domain\Language\ValueObject\LanguageId;
 use PrestaShop\PrestaShop\Core\Domain\Product\ValueObject\ProductId;
+use PrestaShop\PrestaShop\Core\Domain\Shop\ValueObject\ShopConstraint;
 use PrestaShop\PrestaShop\Core\Form\ConfigurableFormChoiceProviderInterface;
 use PrestaShop\PrestaShop\Core\Product\Combination\NameBuilder\CombinationNameBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
@@ -38,7 +40,7 @@ use Symfony\Component\OptionsResolver\OptionsResolver;
 class CombinationIdChoiceProvider implements ConfigurableFormChoiceProviderInterface
 {
     /**
-     * @var CombinationRepository
+     * @var CombinationMultiShopRepository
      */
     private $combinationRepository;
 
@@ -58,13 +60,13 @@ class CombinationIdChoiceProvider implements ConfigurableFormChoiceProviderInter
     private $languageId;
 
     /**
-     * @param CombinationRepository $combinationRepository
+     * @param CombinationMultiShopRepository $combinationRepository
      * @param AttributeRepository $attributeRepository
      * @param CombinationNameBuilderInterface $combinationNameBuilder
      * @param int $languageId
      */
     public function __construct(
-        CombinationRepository $combinationRepository,
+        CombinationMultiShopRepository $combinationRepository,
         AttributeRepository $attributeRepository,
         CombinationNameBuilderInterface $combinationNameBuilder,
         int $languageId
@@ -83,7 +85,11 @@ class CombinationIdChoiceProvider implements ConfigurableFormChoiceProviderInter
     public function getChoices(array $options): array
     {
         $options = $this->resolveOptions($options);
-        $combinationIds = $this->combinationRepository->getCombinationIds(new ProductId($options['product_id']));
+        $shopId = $options['shop_id'];
+        $combinationIds = $this->combinationRepository->getCombinationIds(
+            new ProductId($options['product_id']),
+            $shopId ? ShopConstraint::shop($shopId) : ShopConstraint::allShops()
+        );
         $attributesInfo = $this->attributeRepository->getAttributesInfoByCombinationIds($combinationIds, $this->languageId);
 
         $choices = [];
@@ -101,7 +107,9 @@ class CombinationIdChoiceProvider implements ConfigurableFormChoiceProviderInter
     {
         $resolver = new OptionsResolver();
         $resolver->setRequired(['product_id']);
+        $resolver->setDefaults(['shop_id' => null]);
         $resolver->setAllowedTypes('product_id', 'int');
+        $resolver->setAllowedTypes('shop_id', ['int', 'null']);
 
         return $resolver->resolve($options);
     }
