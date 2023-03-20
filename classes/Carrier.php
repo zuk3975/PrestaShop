@@ -24,6 +24,7 @@
  * @license   https://opensource.org/licenses/OSL-3.0 Open Software License (OSL 3.0)
  */
 use PrestaShop\PrestaShop\Adapter\ServiceLocator;
+use PrestaShop\PrestaShop\Core\Domain\Carrier\ValueObject\ShippingMethod;
 
 class CarrierCore extends ObjectModel
 {
@@ -36,10 +37,10 @@ class CarrierCore extends ObjectModel
     public const PS_CARRIERS_AND_CARRIER_MODULES_NEED_RANGE = 4;
     public const ALL_CARRIERS = 5;
 
-    public const SHIPPING_METHOD_DEFAULT = 0;
-    public const SHIPPING_METHOD_WEIGHT = 1;
-    public const SHIPPING_METHOD_PRICE = 2;
-    public const SHIPPING_METHOD_FREE = 3;
+    public const SHIPPING_METHOD_DEFAULT = ShippingMethod::SHIPPING_METHOD_DEFAULT;
+    public const SHIPPING_METHOD_WEIGHT = ShippingMethod::SHIPPING_METHOD_WEIGHT;
+    public const SHIPPING_METHOD_PRICE = ShippingMethod::SHIPPING_METHOD_PRICE;
+    public const SHIPPING_METHOD_FREE = ShippingMethod::SHIPPING_METHOD_FREE;
 
     public const SHIPPING_PRICE_EXCEPTION = 0;
     public const SHIPPING_WEIGHT_EXCEPTION = 1;

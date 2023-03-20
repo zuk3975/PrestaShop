@@ -42,4 +42,18 @@ class CarrierConstraintException extends CarrierException
      * Thrown when carrier reference id is not valid
      */
     public const INVALID_REFERENCE_ID = 20;
+
+    public const INVALID_SHIPPING_METHOD = 30;
+
+    public const INVALID_SPEED_GRADE = 40;
+
+    public const INVALID_OUT_OF_RANGE_BEHAVIOR = 50;
+
+    public const INVALID_WIDTH = 60;
+
+    public const INVALID_HEIGHT = 70;
+
+    public const INVALID_DEPTH = 80;
+
+    public const INVALID_WEIGHT = 90;
 }
